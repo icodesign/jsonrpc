@@ -4,7 +4,27 @@ use std::pin::Pin;
 use std::task::Poll;
 use std::time::Duration;
 
-use tokio::time::Delay;
+use tokio::time::Instant;
+
+struct Delay {
+	when: Instant,
+}
+
+impl Future for Delay {
+	type Output = ();
+
+	fn poll(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>)
+			-> Poll<()>
+	{
+		if Instant::now() >= self.when {
+			Poll::Ready(())
+		} else {
+			// Ignore this line for now.
+			cx.waker().wake_by_ref();
+			Poll::Pending
+		}
+	}
+}
 
 /// `Incoming` is a stream of incoming sockets
 /// Polling the stream may return a temporary io::Error (for instance if we can't open the connection because of "too many open files" limit)
@@ -78,7 +98,7 @@ where
 					};
 					debug!("Error accepting connection: {}", err);
 					debug!("The server will stop accepting connections for {:?}", self.next_delay);
-					self.timeout = Some(tokio::time::delay_for(self.next_delay));
+					self.timeout = Some(Delay { when: Instant::now() + self.next_delay });
 				}
 			}
 		}

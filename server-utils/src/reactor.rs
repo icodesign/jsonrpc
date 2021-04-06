@@ -96,10 +96,10 @@ impl RpcEventLoop {
 	pub fn with_name(name: Option<String>) -> io::Result<Self> {
 		let (stop, stopped) = futures::channel::oneshot::channel();
 
-		let mut tb = runtime::Builder::new();
-		tb.core_threads(1);
-		tb.threaded_scheduler();
-		tb.enable_all();
+		let mut tb = runtime::Builder::new_multi_thread();
+		// tb.core_threads(1);
+		// tb.threaded_scheduler();
+		// tb.enable_all();
 
 		if let Some(name) = name {
 			tb.thread_name(name);
